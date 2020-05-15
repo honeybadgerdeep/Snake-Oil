@@ -27,8 +27,8 @@ window.onload = function() {
     } else {
         this.document.getElementById("cookie_information").innerHTML = "no cookie set";
         var name = prompt("Enter your name:");
-        this.document.cookie = "username=" + name + "; path=/";
-        this.location.reload();
+        this.document.cookie = "username=" + name + "; path=/";        
+        this.location.reload(true);
     }
 }
 
