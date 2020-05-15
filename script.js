@@ -243,12 +243,7 @@ function welcome_screen() {
         username: getAttributeFromCookie("username"),
         background: "darkorange"
     }
-
-    database.ref('games/' + getAttributeFromCookie("game-id") + '/accepting_players').on("value", function(snapshot) {
-        if (!snapshot.val()) {
-            game_view();
-        }
-    });
+    
     database.ref('games/' + getAttributeFromCookie("game-id") + '/players/').on("value", add_player_previews);
 }
 
@@ -280,6 +275,12 @@ function add_player_previews(snapshot) {
         preview.style.backgroundColor = "none";
         preview.onclick = game_view;
         document.getElementById("welcome_screen").append(preview);
+    } else {
+        database.ref('games/' + getAttributeFromCookie("game-id") + '/accepting_players').on("value", function(snapshot) {
+            if (snapshot.val() == false) {
+                game_view();
+            }
+        });    
     }
 }
 
@@ -292,7 +293,6 @@ function game_view() {
 
     document.getElementById("welcome_screen").style.display = "none";    
     document.getElementById("game_screen").style.display = "block";
-    document.getElementById("game_screen").innerHTML = "<p id='curr_judge'>xdlmao</p>";
 
     // build out players view
     var players = Object.keys(val_local["players"]);
@@ -394,7 +394,7 @@ function game_view() {
                 document.getElementById(players[i]).classList.remove('not_drawn');
             }
 
-            
+                        
         }
     });
 
