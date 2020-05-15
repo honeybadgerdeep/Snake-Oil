@@ -19,18 +19,26 @@ database = firebase.database();
 
 // local data stuff
 val_local = [];
+local_cookie = ""; // dummy local data
 
 // check for cookie information when the window is loaded
 window.onload = function() {
-    if (document.cookie) {
-        document.getElementById("cookie_information").innerHTML = "Hi " + getAttributeFromCookie(document.cookie, "username") + "!";
+    var url = location.href;
+    // check for local memes
+    if (url.includes("file://")) {
+        this.alert("local");
     } else {
-        this.document.getElementById("cookie_information").innerHTML = "no cookie set";
-        var name = prompt("Enter your name:");
-        this.document.cookie = "username=" + name + "; path=/";
-        reload();        
+        if (document.cookie) {
+            document.getElementById("cookie_information").innerHTML = "Hi " + getAttributeFromCookie(document.cookie, "username") + "!";
+        } else {
+            this.document.getElementById("cookie_information").innerHTML = "no cookie set";
+            var name = prompt("Enter your name:");
+            this.document.cookie = "username=" + name + "; path=/";
+            reload();        
+        }
     }
 }
+
 
 database.ref('test/').on('value', function(snapshot) {
     values = Object.values(snapshot.val());
@@ -63,7 +71,6 @@ function addItem(item) {
     li.innerHTML = item;
     document.getElementById("content_list").append(li);
 }
-
 
 // overall algorithm helper functions go here
 
