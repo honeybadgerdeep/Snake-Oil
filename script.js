@@ -18,15 +18,20 @@ database = firebase.database();
 
 
 // local data stuff
-val_local = [];
-local_cookie = ""; // dummy local data
+var val_local = [];
+// var local_cookie;
+var local_cookie = "username=honeybadgerdeep;player-id=ID54;game-id=57;path=/"; // dummy local data
 
 // check for cookie information when the window is loaded
 window.onload = function() {
-    var url = location.href;
+
     // check for local memes
-    if (url.includes("file://")) {
-        this.alert("local");
+    if (this.location.href.includes("file://")) {
+        if (local_cookie) {
+            welcome_screen();
+        } else {
+            show_buttons();
+        }
     } else {
         if (document.cookie) {
             document.getElementById("cookie_information").innerHTML = "Hi " + getAttributeFromCookie(document.cookie, "username") + "!";
@@ -39,16 +44,17 @@ window.onload = function() {
     }
 }
 
-
-database.ref('test/').on('value', function(snapshot) {
-    values = Object.values(snapshot.val());
-    for (el in values) {
-        if (!val_local.includes(values[el])) {
-            addItem(values[el]);
-            val_local.push(values[el]);
+function test() {
+    database.ref('test/').on('value', function(snapshot) {
+        values = Object.values(snapshot.val());
+        for (el in values) {
+            if (!val_local.includes(values[el])) {
+                addItem(values[el]);
+                val_local.push(values[el]);
+            }
         }
-    }
-});
+    });    
+}
 
 function addData() {
     // get the data from the input element
@@ -74,8 +80,16 @@ function addItem(item) {
 
 // overall algorithm helper functions go here
 
-// cookie parser
-function getAttributeFromCookie(cookie, tag) {
+// cookie parser code
+function getAttributeFromCookie(tag) {
+    var cookie;
+
+    if (location.href.includes("file://")) {
+        cookie = local_cookie;
+    } else {
+        cookie = document.cookie;
+    }
+
     if (cookie) {
         var target = tag + "=";
         var chunks = decodeURIComponent(cookie).split(';');
@@ -93,6 +107,111 @@ function getAttributeFromCookie(cookie, tag) {
     return "";
 }
 
+function setAttributeForCookie(attr, el) {
+    var new_cookie = "";
+
+    var cookie = "";
+
+    if (location.href.includes("file://")) {
+        cookie = local_cookie;
+    } else {
+        cookie = document.cookie;
+    }
+
+    // check for various properties in the game
+    new_cookie += "username=" + (attr == "username" ? el : getAttributeFromCookie("username")) + ";";
+    new_cookie += "player-id=" + (attr == "player-id" ? el : getAttributeFromCookie("player-id")) + ";";
+    new_cookie += "game-id=" + (attr == "game-id" ? el : getAttributeFromCookie("game-id")) + ";";
+    new_cookie += "path=/";
+
+    if (location.href.includes("file://")) {
+        local_cookie = new_cookie;
+    } else {
+        document.cookie = new_cookie;
+    }
+}
+
 function reload() {
     window.location.reload();
+}
+
+function hide_buttons() {
+    document.getElementById("joiners").style.display = "none";
+}
+
+function show_buttons() {
+    document.getElementById("joiners").style.display = "block";
+}
+
+function create_new() {
+    hide_buttons();
+    // set game ID cookie to the game code
+    player_prompt();
+}
+
+function join() {
+    hide_buttons();
+    show_input("game_code","Enter Game Code");
+    document.getElementById('game_code').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            var game_code = document.getElementById('game_code').value;            
+            if (!game_code.replace(/\s/g, '').length) {
+                alert("Field cannot be empty");
+            } else {
+                document.getElementById('game_code').value = "";
+                hide_input("game_code");
+                setAttributeForCookie("game-id",game_code);
+                player_prompt();
+            }
+        }
+    });
+}
+
+function player_prompt() {
+    show_input("player_input","Enter Player Name");
+    document.getElementById('player_input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            var player_name = document.getElementById('player_input').value;
+            if (!player_name.replace(/\s/g, '').length) {
+                alert("Field cannot be empty");                
+            } else {
+                document.getElementById('player_input').value = "";
+                hide_input("player_input");
+                setAttributeForCookie("username",player_name);
+                welcome_screen();    
+            }
+        }
+    });
+}
+
+function show_input(btn, msg) {
+    document.getElementById(btn).placeholder = msg;
+    document.getElementById(btn).style.display = "inline-block";
+    document.getElementById(btn).focus();
+}
+
+function hide_input(btn) {
+    document.getElementById(btn).placeholder = "";
+    document.getElementById(btn).style.display = "none";
+}
+
+function welcome_screen() {
+    // check for local mode for testing
+    document.getElementById("welcome_screen").style.display = "block";
+    document.querySelector("#welcome_screen p:nth-child(1)").innerHTML = "Session ID: " + getAttributeFromCookie("game-id") + " (share w/ friends!)";
+    document.querySelector("#welcome_screen p:nth-child(2)").innerHTML = "Welcome " + getAttributeFromCookie("username") + "!";
+    data = {
+        username: getAttributeFromCookie("username"),
+        background: "darkorange"
+    }
+    add_player_preview(data);
+
+}
+
+function add_player_preview(data) {
+    var preview = document.createElement("div");
+    preview.classList.add("player_preview");
+    preview.innerHTML = data['username'];
+    preview.style.backgroundColor = data['background'];
+    document.getElementById("welcome_screen").append(preview);
 }

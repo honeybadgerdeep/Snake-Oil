@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <title>DCF Plays Snake Oil!</title>
         <link href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="style.css">
         <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -12,12 +13,24 @@
         <script type="text/javascript" src="script.js"></script>
     </head>
     <body>
-        <p id="cookie_information">something</p>
+        <h1 id="game_header">DCF Plays Snake Oil!</h1>
+        <p id="cookie_information"></p>
         <div id="container">
             <div id="center_page">
                 <input class="row_1" id="data_val"></input>
                 <button class="row_1" id="add_data" onclick="addData()">Text here</button>
                 <ul id="content_list"></ul>
+            </div>
+            <div id="joiners">
+                <button class="join_buttons" id="join_existing" onclick="join()">Join Existing</button>
+                <button class="join_buttons" id="create_new" onclick="create_new()">Create New</button>
+            </div>
+            <input type="text/plain" class="user_input" id="player_input"></input>
+            <input type="text/plain" class="user_input" id="game_code"></input>
+            <div id="welcome_screen">
+                <p></p>
+                <p></p>
+                <div class="player_preview"></div>                
             </div>
         </div>
     </body>

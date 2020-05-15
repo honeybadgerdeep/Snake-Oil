@@ -1,12 +1,26 @@
 body {
-    background-color: green;
+    background-color: #2e86de;
+}
+
+#game_header {
+    font-family: 'Balsamiq Sans', cursive;
+    /* text-decoration: underline; */
+    color: white;
+    border: 3px solid white;
+    cursor: default;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    font-size: 2.5em;
+    text-align: center;
+    padding: 20px;
+    width: fit-content;
+    margin: auto;
 }
 
 p {
     font-family: 'Balsamiq Sans', cursive;
     color: white;
     font-size: 3em;
-    text-transform: capitalize;
 }
 
 #container {
@@ -14,16 +28,66 @@ p {
     justify-content: center;
     align-items: center;
 }
+
+#joiners {
+    display: none;
+}
+
+.join_buttons {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    width: 250px;
+    padding: 10px;
+    color: white;
+    font-family: 'Balsamiq Sans', cursive;
+    font-size: 1.85em;
+    border-radius: 3px;
+}
+
+#joiners button:active {
+    outline: none;
+}
+
+#join_existing {    
+    background: #f39c12;
+    border: 2px solid #e67e22;
+}
+
+#join_existing:hover {
+    background: #e67e22;
+}
+
+#create_new {
+    background: #ff6b6b;
+    border: 2px solid #e74c3c;
+}
+
+#create_new:hover {
+    background: #e74c3c;
+}
+
+.user_input {
+    display: none;
+    margin-top: 10px;
+    width: fit-content;
+    padding: 10px;
+    color: grey;
+    font-family: 'Balsamiq Sans', cursive;
+    font-size: 1.85em;
+    border-radius: 3px;
+    border: 2px solid grey
+}
+
 .row_1 {
     display: inline-block;
     margin: 5px;
 }
 
 #center_page {
-    display: inline-block;
+    display: none;
     background: #e74c3c;
     margin: auto;
-    margin-top: 250px;
     padding: 50px;
 }
 
@@ -59,4 +123,22 @@ p {
     text-decoration: none;
     margin: 10px;
     color: white;
+}
+
+#welcome_screen {
+
+}
+
+#welcome_screen p {
+    font-size: 1.25em;
+}
+
+.player_preview {
+    color: white;
+    border-radius: 3.5px;
+    text-align: center;
+    padding: 10px;
+    display: block;
+    font-family: 'Balsamiq Sans', cursive;
+    cursor: pointer;
 }
