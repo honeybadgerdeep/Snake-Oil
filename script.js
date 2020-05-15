@@ -20,8 +20,8 @@ database = firebase.database();
 // local data stuff
 var val_local = [];
 var personal_cookie_data = {};
-var local_cookie;
-// var local_cookie = "username=Matthew;player-id=-M7NUa1JOC0mgYMnLEUL;session-id=7729;game-id=-M7NU-if33pnF6XSSPJO;path=/"; // dummy local data
+// var local_cookie;
+var local_cookie = "session-id=26642; game-id=-M7NZYXi7MdoIrIafGJA; username=Sachit; player-id=-M7NZZe90E0oXX4pnytR"; // dummy local data
 
 // check for cookie information when the window is loaded
 window.onload = function() {
@@ -257,13 +257,12 @@ function add_player_previews(snapshot) {
         preview.style.backgroundColor = snapshot.val()[players[i]]['background'];
         document.getElementById("welcome_screen").append(preview);    
     }
-    if (snapshot.val(getAttributeFromCookie("player-id"))["role"]=="owner") {
+    if (snapshot.val()[getAttributeFromCookie("player-id")]["role"]=="owner") {
         var preview = document.createElement("div");
         preview.classList.add("player_preview");
         preview.innerHTML = "Begin Game!";
+        preview.id = "begin";
         preview.style.backgroundColor = "none";
-        preview.style.border = "white";
-        preview.style.borderWidth = "2px";
         document.getElementById("welcome_screen").append(preview);            
     }
 }
