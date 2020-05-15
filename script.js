@@ -244,6 +244,11 @@ function welcome_screen() {
         background: "darkorange"
     }
 
+    database.ref('games/' + getAttributeFromCookie("game-id") + '/accepting_players').on("value", function(snapshot) {
+        if (!snapshot.val()) {
+            game_view();
+        }
+    });
     database.ref('games/' + getAttributeFromCookie("game-id") + '/players/').on("value", add_player_previews);
 }
 
