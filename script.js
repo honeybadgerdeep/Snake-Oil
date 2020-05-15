@@ -105,27 +105,16 @@ function getAttributeFromCookie(tag) {
 }
 
 function setAttributeForCookie(attr, el) {
-    var new_cookie = "";
-
-    var cookie = "";
 
     if (location.href.includes("file://")) {
-        cookie = local_cookie;
-    } else {
-        cookie = document.cookie;
-    }
-
-    // check for various properties in the game
-    new_cookie += "username=" + (attr == "username" ? el : getAttributeFromCookie("username")) + ";";
-    new_cookie += "player-id=" + (attr == "player-id" ? el : getAttributeFromCookie("player-id")) + ";";
-    new_cookie += "game-id=" + (attr == "game-id" ? el : getAttributeFromCookie("game-id")) + ";";
-    new_cookie += "path=/";
-
-    if (location.href.includes("file://")) {
+        var new_cookie = "";
+        new_cookie += "username=" + (attr == "username" ? el : getAttributeFromCookie("username")) + ";";
+        new_cookie += "player-id=" + (attr == "player-id" ? el : getAttributeFromCookie("player-id")) + ";";
+        new_cookie += "game-id=" + (attr == "game-id" ? el : getAttributeFromCookie("game-id")) + ";";
+        new_cookie += "path=/";
         local_cookie = new_cookie;
     } else {
-        console.log(new_cookie);
-        document.cookie = new_cookie;
+        document.cookie = attr + "=" + el;
     }
 }
 
