@@ -1,4 +1,5 @@
 body {
+
     background-color: #2e86de;
 }
 
@@ -144,6 +145,11 @@ p {
     cursor: pointer;
 }
 
-#preview {
+#begin {
     border: 2px solid white;
+}
+
+#begin:hover {
+    color: #2e86de;
+    background: white;
 }
