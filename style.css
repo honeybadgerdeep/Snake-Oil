@@ -1,0 +1,62 @@
+body {
+    background-color: green;
+}
+
+p {
+    font-family: 'Balsamiq Sans', cursive;
+    color: white;
+    font-size: 3em;
+    text-transform: capitalize;
+}
+
+#container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.row_1 {
+    display: inline-block;
+    margin: 5px;
+}
+
+#center_page {
+    display: inline-block;
+    background: #e74c3c;
+    margin: auto;
+    margin-top: 250px;
+    padding: 50px;
+}
+
+#add_data {
+    font-family: 'Balsamiq Sans', cursive;
+    border-radius: 7.5px;
+    font-size: 1.3em;
+    padding: 5px;
+    background: #27ae60;
+    color: white;
+    border: none;
+}
+
+#add_data:focus {
+    outline: none;
+}
+
+#data_val {
+    border: none;
+    border-radius: 7.5px;
+    font-size: 1.3em;
+    padding: 5px;
+}
+
+#data_val:focus {
+    border: none;
+    outline: none;
+}
+
+#content_list {
+    font-family: 'Balsamiq Sans', cursive;
+    list-style-type: none;
+    text-decoration: none;
+    margin: 10px;
+    color: white;
+}
