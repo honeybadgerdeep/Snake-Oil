@@ -124,6 +124,7 @@ function setAttributeForCookie(attr, el) {
     if (location.href.includes("file://")) {
         local_cookie = new_cookie;
     } else {
+        console.log(new_cookie);
         document.cookie = new_cookie;
     }
 }
