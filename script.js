@@ -23,10 +23,11 @@ val_local = [];
 // check for cookie information when the window is loaded
 window.onload = function() {
     if (document.cookie) {
-        document.getElementById("cookie_information").innerHTML = document.cookie;    
+        document.getElementById("cookie_information").innerHTML = "Hi " + getAttributeFromCookie(document.cookie, "username") + "!";
     } else {
         this.document.getElementById("cookie_information").innerHTML = "no cookie set";
-        this.document.cookie = "username=John; path=/";
+        var name = prompt("Enter your name:");
+        this.document.cookie = "username=" + name + "; path=/";
     }
 }
 
@@ -62,4 +63,24 @@ function addItem(item) {
     document.getElementById("content_list").append(li);
 }
 
+
 // overall algorithm helper functions go here
+
+// cookie parser
+function getAttributeFromCookie(cookie, tag) {
+    if (cookie) {
+        var target = tag + "=";
+        var chunks = decodeURIComponent(cookie).split(';');
+        for (var i = 0; i < chunks.length; i++) {
+            var el = chunks[i];
+            while (el.charAt(0) == ' ') {
+                el = el.substring(1);
+            }
+            if (el.indexOf(target) == 0) {
+                return el.substring(target.length,el.length);
+            }
+        }
+    }
+
+    return "";
+}
