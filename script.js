@@ -34,12 +34,9 @@ window.onload = function() {
         }
     } else {
         if (document.cookie) {
-            document.getElementById("cookie_information").innerHTML = "Hi " + getAttributeFromCookie(document.cookie, "username") + "!";
+            welcome_screen();
         } else {
-            this.document.getElementById("cookie_information").innerHTML = "no cookie set";
-            var name = prompt("Enter your name:");
-            this.document.cookie = "username=" + name + "; path=/";
-            reload();        
+            show_buttons();
         }
     }
 }
