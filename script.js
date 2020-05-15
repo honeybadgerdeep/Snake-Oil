@@ -19,8 +19,9 @@ database = firebase.database();
 
 // local data stuff
 var val_local = [];
-// var local_cookie;
-var local_cookie = "username=honeybadgerdeep;player-id=ID54;game-id=57;path=/"; // dummy local data
+var personal_cookie_data = {};
+var local_cookie;
+// var local_cookie = "username=Matthew;player-id=-M7NUa1JOC0mgYMnLEUL;session-id=7729;game-id=-M7NU-if33pnF6XSSPJO;path=/"; // dummy local data
 
 // check for cookie information when the window is loaded
 window.onload = function() {
@@ -35,6 +36,7 @@ window.onload = function() {
     } else {
         if (document.cookie) {
             welcome_screen();
+
         } else {
             show_buttons();
         }
@@ -110,16 +112,13 @@ function setAttributeForCookie(attr, el) {
         var new_cookie = "";
         new_cookie += "username=" + (attr == "username" ? el : getAttributeFromCookie("username")) + ";";
         new_cookie += "player-id=" + (attr == "player-id" ? el : getAttributeFromCookie("player-id")) + ";";
+        new_cookie += "session-id=" + (attr == "session-id" ? el : getAttributeFromCookie("session-id")) + ";";
         new_cookie += "game-id=" + (attr == "game-id" ? el : getAttributeFromCookie("game-id")) + ";";
         new_cookie += "path=/";
         local_cookie = new_cookie;
     } else {
         document.cookie = attr + "=" + el;
     }
-}
-
-function reload() {
-    window.location.reload();
 }
 
 function hide_buttons() {
@@ -132,8 +131,38 @@ function show_buttons() {
 
 function create_new() {
     hide_buttons();
-    // set game ID cookie to the game code
-    player_prompt();
+    database.ref('active_rounds').once('value').then(function(snapshot) {
+        var sess_id = -1;
+        if (snapshot.val()) {
+            sess_id = getRandomizer(1000,99999);
+            var active = Object.keys(snapshot.val());
+            while (active.includes(sess_id)) {
+                sess_id = getRandomizer(1000,9999);
+            }
+        } else {
+            sess_id = getRandomizer(1000,9999);
+            console.log(sess_id);
+        }
+
+        
+        var game_data = {
+            
+        };
+        
+        setAttributeForCookie("session-id",sess_id);
+
+        var game_id = database.ref('games/' + sess_id + "/").push(game_data).key;
+
+        database.ref("active_rounds/"+sess_id).set(game_id);
+
+        setAttributeForCookie("game-id",game_id);
+
+        player_prompt("owner");
+    });
+}
+
+function getRandomizer(bottom, top) {
+    return Math.floor( Math.random() * ( 1 + top - bottom ) ) + bottom;
 }
 
 function join() {
@@ -147,14 +176,18 @@ function join() {
             } else {
                 document.getElementById('game_code').value = "";
                 hide_input("game_code");
-                setAttributeForCookie("game-id",game_code);
-                player_prompt();
+                setAttributeForCookie("session-id",game_code);
+                database.ref("active_rounds/"+game_code).once("value",function(snapshot) {
+                    setAttributeForCookie("game-id",snapshot.val());
+                });
+
+                player_prompt("member");
             }
         }
     });
 }
 
-function player_prompt() {
+function player_prompt(mode) {
     show_input("player_input","Enter Player Name");
     document.getElementById('player_input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
@@ -165,10 +198,24 @@ function player_prompt() {
                 document.getElementById('player_input').value = "";
                 hide_input("player_input");
                 setAttributeForCookie("username",player_name);
-                welcome_screen();    
+                player_obj = {
+                    "username": player_name,
+                    "score": 0,
+                    "card": "",
+                    "role": mode,
+                    "background": generateRandomColor()
+                }
+                var player_id = database.ref("games/"+getAttributeFromCookie("game-id")).child("players/").push(player_obj).key;
+                setAttributeForCookie("player-id",player_id);
+                welcome_screen();
             }
         }
     });
+}
+
+function generateRandomColor() {
+    var colors = ["#1abc9c","#2ecc71","#3498db","#9b59b6","#34495e","#16a085","#27ae60","#2980b9","#8e44ad","#2c3e50","#f1c40f","#e67e22","#e74c3c","#ecf0f1","#95a5a6","#f39c12","#d35400","#c0392b","#bdc3c7","#7f8c8d"];
+    return colors[getRandomizer(0,colors.length - 1)];    
 }
 
 function show_input(btn, msg) {
@@ -185,20 +232,29 @@ function hide_input(btn) {
 function welcome_screen() {
     // check for local mode for testing
     document.getElementById("welcome_screen").style.display = "block";
-    document.querySelector("#welcome_screen p:nth-child(1)").innerHTML = "Session ID: " + getAttributeFromCookie("game-id") + " (share w/ friends!)";
+    document.querySelector("#welcome_screen p:nth-child(1)").innerHTML = "Session ID: " + getAttributeFromCookie("session-id") + " (share w/ friends!)";
     document.querySelector("#welcome_screen p:nth-child(2)").innerHTML = "Welcome " + getAttributeFromCookie("username") + "!";
     data = {
         username: getAttributeFromCookie("username"),
         background: "darkorange"
     }
-    add_player_preview(data);
 
+    database.ref('games/' + getAttributeFromCookie("game-id") + '/players/').on("value", add_player_previews);
 }
 
-function add_player_preview(data) {
-    var preview = document.createElement("div");
-    preview.classList.add("player_preview");
-    preview.innerHTML = data['username'];
-    preview.style.backgroundColor = data['background'];
-    document.getElementById("welcome_screen").append(preview);
+function add_player_previews(snapshot) {
+    // clear players
+    var p = document.getElementsByClassName('player_preview');
+    while (p[0]) {
+        p[0].parentNode.removeChild(p[0]);
+    }
+
+    var players = Object.keys(snapshot.val());
+    for (var i = 0; i < players.length; i++) {
+        var preview = document.createElement("div");
+        preview.classList.add("player_preview");
+        preview.innerHTML = snapshot.val()[players[i]]['username'];
+        preview.style.backgroundColor = snapshot.val()[players[i]]['background'];
+        document.getElementById("welcome_screen").append(preview);    
+    }
 }

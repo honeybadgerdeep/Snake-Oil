@@ -136,6 +136,7 @@ p {
 .player_preview {
     color: white;
     border-radius: 3.5px;
+    margin: 10px;
     text-align: center;
     padding: 10px;
     display: block;
