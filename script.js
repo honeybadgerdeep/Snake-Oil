@@ -18,7 +18,7 @@ database = firebase.database();
 
 
 // local data stuff
-var val_local = [];
+var val_local = {};
 var personal_cookie_data = {};
 // var local_cookie;
 var local_cookie = "session-id=26642; game-id=-M7NZYXi7MdoIrIafGJA; username=Sachit; player-id=-M7NZZe90E0oXX4pnytR"; // dummy local data
@@ -155,7 +155,11 @@ function create_new() {
 
         database.ref("active_rounds/"+sess_id).set(game_id);
 
+
         setAttributeForCookie("game-id",game_id);
+
+        database.ref('games/' + getAttributeFromCookie('game-id') + '/accepting_players').set(true);
+        database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set("round_start");
 
         player_prompt("owner");
     });
@@ -203,7 +207,8 @@ function player_prompt(mode) {
                     "score": 0,
                     "card": "",
                     "role": mode,
-                    "background": generateRandomColor()
+                    "background": generateRandomColor(),
+                    "drawn": false
                 }
                 var player_id = database.ref("games/"+getAttributeFromCookie("game-id")).child("players/").push(player_obj).key;
                 setAttributeForCookie("player-id",player_id);
@@ -257,12 +262,166 @@ function add_player_previews(snapshot) {
         preview.style.backgroundColor = snapshot.val()[players[i]]['background'];
         document.getElementById("welcome_screen").append(preview);    
     }
+
+    if (val_local["players"] != snapshot.val()) {
+        val_local["players"] = snapshot.val();
+    }
+
     if (snapshot.val()[getAttributeFromCookie("player-id")]["role"]=="owner") {
         var preview = document.createElement("div");
         preview.classList.add("player_preview");
         preview.innerHTML = "Begin Game!";
         preview.id = "begin";
         preview.style.backgroundColor = "none";
-        document.getElementById("welcome_screen").append(preview);            
+        preview.onclick = game_view;
+        document.getElementById("welcome_screen").append(preview);
     }
+}
+
+function game_view() {
+    database.ref('games/' + getAttributeFromCookie("game-id") + '/players/').off("value", add_player_previews);
+    var p = document.getElementsByClassName('player_preview');
+    while (p[0]) {
+        p[0].parentNode.removeChild(p[0]);
+    }
+
+    document.getElementById("welcome_screen").style.display = "none";    
+    document.getElementById("game_screen").style.display = "block";
+    document.getElementById("game_screen").innerHTML = "<p id='curr_judge'>xdlmao</p>";
+
+    // build out players view
+    var players = Object.keys(val_local["players"]);
+    var owner = "";
+    for (var i = 0; i < players.length; i++) {
+        var p_view = document.createElement("div");
+        var name = document.createElement("p");
+        var ct = document.createElement("p");
+        if (val_local["players"][players[i]]['role'] == "owner") {
+            owner = players[i];
+        }
+        p_view.classList.add("player_preview");
+        name.innerHTML = val_local["players"][players[i]]['username'] + "<br/>";
+        p_view.append(name);
+        ct.innerHTML = 0;
+        p_view.append(ct);
+        p_view.classList.add("not_drawn");
+        p_view.id = players[i];
+        document.getElementById("game_screen").append(p_view);    
+    }
+
+
+    // no longer accepting players
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/accepting_players').set(false);
+
+    // set the first judge to the owner
+    val_local['current_judge'] = owner;
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_judge').set(owner);
+
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_judge').on('value', function(snapshot) {
+        var el = document.querySelector("#" + snapshot.val() + " p:nth-child(2)").innerHTML = "(Judge)";
+    });
+
+    document.getElementById('game_screen').innerHTML += "<p id='game_status'>Status Text</p>";
+    var draw_btn = document.createElement('button');
+    draw_btn.id = 'draw_btn';
+    draw_btn.innerHTML = "Draw Your Cards";    
+    document.getElementById('game_screen').append(draw_btn);
+
+    var card = document.createElement('div');
+    card.id = 'card';
+    card.style.display = "none";
+    card.style.backgroundColor = val_local["players"][getAttributeFromCookie("player-id")]['background'];
+    document.getElementById('game_screen').append(card);
+
+    // drawing cards feature
+    document.getElementById('draw_btn').addEventListener('click',function(e) {
+        //randomize card deck shuffle
+        var card_msg = "";
+        if (getAttributeFromCookie('player-id') == val_local['current_judge']) {
+            card_msg = randomOccupation();
+        } else {
+            var card_msg = randomWord() + " " + randomWord();
+        }
+        database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/drawn').set(true);
+        database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/card').set(card_msg);
+    });
+
+    // remove/add card button based on need to draw
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/drawn').on('value', function(snapshot) {
+        document.getElementById('draw_btn').style.display = snapshot.val() ? "none": "block";
+        document.getElementById('card').style.display = snapshot.val() ? "block" : "none";
+    });
+
+    // check for card values
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/card').on('value', function(snapshot) {
+        split = snapshot.val().split(" ");
+        document.getElementById('card').innerHTML = "";
+        for (var i = 0; i < split.length; i++) {
+            if (i != 0) {
+                document.getElementById('card').innerHTML += '<br/>';
+            }
+            document.getElementById('card').innerHTML += split[i];
+        }
+    });
+
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').on('value',function(snapshot) {
+        var mode = snapshot.val();
+        val_local["game_mode"] = mode;
+        var players = Object.keys(val_local["players"]);
+        // round has started, all players invited to draw cards
+        if (mode == "round_start") {
+            // update status
+            document.getElementById('game_status').innerHTML = "Everyone should draw...";
+
+            // everyone must draw
+            for (var i = 0; i < players.length; i++) {
+                document.getElementById(players[i]).style.backgroundColor = "";
+                document.getElementById(players[i]).classList.add('not_drawn');
+            }
+        } else if (mode == "choosing") {
+            // update status
+            document.getElementById('game_status').innerHTML = "Judge is choosing the next player";
+
+            // everyone has drawn
+            for (var i = 0; i < players.length; i++) {
+                document.getElementById(players[i]).classList.add('player_preview');
+                document.getElementById(players[i]).style.backgroundColor = val_local["players"][players[i]]['background'];
+                document.getElementById(players[i]).classList.remove('not_drawn');
+            }
+
+            
+        }
+    });
+
+    // gauge overall status of drawing
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/').on('value',function(snapshot) {
+        var players = Object.keys(snapshot.val());
+        for (var i = 0; i < players.length; i++) {
+            if (val_local['game_mode'] == 'round_start' && snapshot.val()[players[i]]['drawn']) {
+                document.getElementById(players[i]).classList.remove('not_drawn');
+                document.getElementById(players[i]).classList.add('player_preview');
+                document.getElementById(players[i]).style.backgroundColor = snapshot.val()[players[i]]['background'];
+            }
+        }
+
+        if (document.getElementsByClassName('not_drawn').length == 0) {
+            database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('choosing');
+        }
+
+
+    });
+}
+
+function selectEdge() {
+
+}
+
+function randomOccupation() {
+    arr = ["doctor", "lawyer", "engineer", "psychologist", "therapist", "grocer", "businessman", "vendor", "clerk", "salesman", "voodoo doll"];
+    return arr[getRandomizer(0,arr.length - 1)];
+}
+
+function randomWord() {
+    arr = ["doctor", "lawyer", "engineer", "psychologist", "therapist", "grocer", "businessman", "vendor", "clerk", "salesman", "voodoo doll",'hysterical','part','prick','star','furry','whine','town','tiresome','ripe','opposite','pan','meeting','riddle','woman'    ];
+    return arr[getRandomizer(0,arr.length - 1)];
 }

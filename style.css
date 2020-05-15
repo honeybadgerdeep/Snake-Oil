@@ -1,5 +1,5 @@
 body {
-
+    user-select: none;
     background-color: #2e86de;
 }
 
@@ -18,10 +18,9 @@ body {
     margin: auto;
 }
 
-p {
+.main_screens p {
     font-family: 'Balsamiq Sans', cursive;
     color: white;
-    font-size: 3em;
 }
 
 #container {
@@ -126,11 +125,7 @@ p {
     color: white;
 }
 
-#welcome_screen {
-
-}
-
-#welcome_screen p {
+.main_screens p {
     font-size: 1.25em;
 }
 
@@ -152,4 +147,78 @@ p {
 #begin:hover {
     color: #2e86de;
     background: white;
+}
+
+#game_screen {
+    display: none;
+    padding: 20px;
+}
+
+#game_screen .player_preview {
+    color: white;
+    border-radius: 3.5px;
+    margin: 10px;
+    float: left;
+    text-align: center;
+    padding-left: 25px;
+    padding-right: 25px;
+    min-width: 50px;
+    display: block;
+    font-family: 'Balsamiq Sans', cursive;
+    cursor: pointer;
+}
+
+#game_screen .not_drawn {
+    color: white;
+    background: none;
+    border: 2px solid white
+}
+
+#game_screen .turn {
+    padding-bottom: 40px;
+    border: 2px solid white; 
+}
+
+#game_screen .went {
+    opacity: 0.85;
+    cursor: not-allowed;
+}
+
+#game_status {
+    text-align: center;
+}
+
+#draw_btn {
+    display: block;
+    margin-top: 10px;
+    text-align: center;
+    width: 250px;
+    padding: 10px;
+    color: white;
+    background: #2ecc71;
+    border: 2px solid #27ae60;
+    font-family: 'Balsamiq Sans', cursive;
+    font-size: 1.85em;
+    border-radius: 3px;
+    margin: auto;
+}
+
+#draw_btn:hover {
+    background: #1abc9c;
+}
+
+#card {
+    padding: 50px;
+    border-radius: 5px;
+    border: 10px solid white;
+    color: white;
+    text-align: center;
+    font-family: 'Balsamiq Sans', cursive;
+    width: fit-content;    
+    min-height: 130px;
+    margin: auto;
+}
+
+#game_screen p {
+
 }
