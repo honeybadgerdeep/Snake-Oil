@@ -257,4 +257,13 @@ function add_player_previews(snapshot) {
         preview.style.backgroundColor = snapshot.val()[players[i]]['background'];
         document.getElementById("welcome_screen").append(preview);    
     }
+    if (snapshot.val(getAttributeFromCookie("player-id"))["role"]=="owner") {
+        var preview = document.createElement("div");
+        preview.classList.add("player_preview");
+        preview.innerHTML = "Begin Game!";
+        preview.style.backgroundColor = "none";
+        preview.style.border = "white";
+        preview.style.borderWidth = "2px";
+        document.getElementById("welcome_screen").append(preview);            
+    }
 }
