@@ -43,7 +43,6 @@ window.onload = function() {
     } else {
         if (document.cookie) {
             welcome_screen();
-
         } else {
             show_buttons();
         }
@@ -546,7 +545,7 @@ function game_view() {
             if (location.href.includes("file://")) {
                 local_cookie = undefined;
             } else {
-                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                document.cookie = '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             }
         
             // refresh the page
@@ -683,8 +682,7 @@ function visualTurnShift(e) {
         database.ref('games/' + getAttributeFromCookie("game-id") + "/current_player").set(el.id);
         database.ref('games/' + getAttributeFromCookie("game-id") + "/game_mode").set("turn");
         var now = Date.now();
-        database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 3000);
-        // database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 45000);    
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 45000);    
     } else if (val_local["game_mode"] == "decision" && val_local["current_judge"] == getAttributeFromCookie("player-id")) {
         var el = e.target;
         while (el.id == "") {
