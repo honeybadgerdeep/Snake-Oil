@@ -545,7 +545,7 @@ function game_view() {
             if (location.href.includes("file://")) {
                 local_cookie = undefined;
             } else {
-                document.cookie = '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                document.cookie = undefined;
             }
         
             // refresh the page
