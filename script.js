@@ -694,11 +694,11 @@ function visualTurnShift(e) {
 }
 
 function randomOccupation() {
-    arr = ["doctor", "lawyer", "engineer", "psychologist", "therapist", "grocer", "businessman", "vendor", "clerk", "salesman", "voodoo doll"];
+    arr = ["doctor", "engineer", "movie-star", "hitchhiker","couch potato","newlywed","rapper","hostage","sports mascot","caveman","secret admirer","fashion model","teacher","spy","politician","hunter","pirate","cowboy","nurse","diva","dumpster diver","kindergartner","billionare","sports fan","pro wrestler","senior citizen","geek","ninja","prom date","soldier","party host","super hero","youtuber","UniTrans driver","zombie","cheerleader","babysitter","Paparazzi"]
     return arr[getRandomizer(0,arr.length - 1)];
 }
 
 function randomWord() {
-    arr = ["doctor", "lawyer", "engineer", "psychologist", "therapist", "grocer", "businessman", "vendor", "clerk", "salesman", "voodoo doll",'hysterical','part','prick','star','furry','whine','town','tiresome','ripe','opposite','pan','meeting','riddle','woman'    ];
+    arr = ["jalapeno","allergy","enemy","ornament","plasma","propaganda","invisibility","career","megaphone","termite","internship","evidence","oasis","tournament","latte","apocalypse","barbeque","knife","broom","rain","rainbow","river","pony","friend","patch","stool","oil","fluid","game","tongue","yawn","insect","scarf","lava","kite","tooth","star","photo","mountain","button","window","vacuum","night","muscle","key","tent","mistake","paint","robot","shower","mouth","flower","noise","paper","slide","shell","net","hat","desk","fish","cloud","diaper","worm","crowd","horn","crown","pool","cage","jacket","rocket","rake","life","sky","hook","toe","eraser","anger","story","shovel","parade","flag","joke","bowl","soap","bed","dance","pillow","family","doll","laser","fire","dream","art","vest","bacteria","computer","cave","hug","college","pen","boots","powder","hand","wheel","man","school","cape","oven","shirt","head","software","meditation","diet","blog","costume","nose","rumor","wind","bike","beach","wax","razor","helmet","kit","debt","news","fountain","baby","nest","lip","towel","death","sand","raft","work","book","heart","exercise","slime","giggle","odor","moon","spear","virus","fashion","corpse","urge","moisture","urge","corpse","fashion","virus","spear","moon","magnet","glitter","war","movie","TV","shield","candy","grenade","food","island","club","lock","toy","party","armor","sticker","coffin","body","remote","garden","rope","scream","burp","pajamas","belly","mask","music","socks","toilet","shampoo","hood","blood","banana","crocs","spit","bottle","ice","energy","carpet","box","tax","clock","wall"]
     return arr[getRandomizer(0,arr.length - 1)];
 }
