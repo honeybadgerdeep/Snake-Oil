@@ -174,11 +174,6 @@ body {
     border: 2px solid white
 }
 
-#game_screen .turn {
-    padding-bottom: 40px;
-    border: 2px solid white; 
-}
-
 #game_screen .went {
     opacity: 0.85;
     cursor: not-allowed;
