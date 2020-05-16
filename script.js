@@ -553,6 +553,7 @@ function game_view() {
                 setAttributeForCookie("player-id","");
                 setAttributeForCookie("session-id","");
                 setAttributeForCookie("game-id","");
+                console.log(document.cookie);
             }
         
             // refresh the page
