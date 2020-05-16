@@ -546,10 +546,11 @@ function game_view() {
                 local_cookie = undefined;
             } else {
                 document.cookie = undefined;
+                console.log(document.cookie);
             }
         
             // refresh the page
-            window.location.reload(false);                
+            //window.location.reload(false);                
         }
     });
 
