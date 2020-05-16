@@ -1,16 +1,15 @@
 // firebase code goes here
 // Your web app's Firebase configuration
 var firebaseConfig = {
-    apiKey: "AIzaSyBQkztAPMrfs1NHJpD0kco1CmEO5AZbYNA",
-    authDomain: "example-project-580d5.firebaseapp.com",
-    databaseURL: "https://example-project-580d5.firebaseio.com",
-    projectId: "example-project-580d5",
-    storageBucket: "example-project-580d5.appspot.com",
-    messagingSenderId: "390342480610",
-    appId: "1:390342480610:web:67ccbd8a2259c443bf44bb",
-    measurementId: "G-E8ZVB82C99"
-};
-// Initialize Firebase
+    apiKey: "AIzaSyDh_E3yGTMDPzjT4OmorVXAsAvUsGb1edU",
+    authDomain: "snake-oil-60cf3.firebaseapp.com",
+    databaseURL: "https://snake-oil-60cf3.firebaseio.com",
+    projectId: "snake-oil-60cf3",
+    storageBucket: "snake-oil-60cf3.appspot.com",
+    messagingSenderId: "138515038531",
+    appId: "1:138515038531:web:e612f78796e28f8c8f6ff6"
+  };
+  // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 
 // reference to the game database
