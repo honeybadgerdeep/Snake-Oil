@@ -42,7 +42,11 @@ window.onload = function() {
         }
     } else {
         if (document.cookie) {
-            welcome_screen();
+            if (this.getAttributeFromCookie("player-id") == "") {
+                show_buttons();
+            } else {
+                welcome_screen();
+            }
         } else {
             show_buttons();
         }
@@ -545,7 +549,10 @@ function game_view() {
             if (location.href.includes("file://")) {
                 local_cookie = undefined;
             } else {
-                document.cookie = undefined;
+                setAttributeForCookie("username","");
+                setAttributeForCookie("player-id","");
+                setAttributeForCookie("session-id","");
+                setAttributeForCookie("game-id","");
             }
         
             // refresh the page
