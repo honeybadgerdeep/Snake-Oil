@@ -21,6 +21,9 @@ body {
 .main_screens p {
     font-family: 'Balsamiq Sans', cursive;
     color: white;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
 }
 
 #container {

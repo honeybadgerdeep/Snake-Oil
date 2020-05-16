@@ -19,9 +19,15 @@ database = firebase.database();
 
 // local data stuff
 var val_local = {};
+val_local["judges"] = [];
 var personal_cookie_data = {};
-// var local_cookie;
-var local_cookie = "session-id=99159; game-id=-M7OnVu2ouDNtfmdwZzm; username=Ria; player-id=-M7OnWijzANH5nRu-He_"; // dummy local data
+var local_cookie;
+
+database.ref("active_rounds/").on("value", function(snapshot) {
+    val_local["rounds"] = Object.keys(snapshot.val());
+});
+
+// var local_cookie = "session-id=99159; game-id=-M7OnVu2ouDNtfmdwZzm; username=Ria; player-id=-M7OnWijzANH5nRu-He_"; // dummy local data
 // var local_cookie = "session-id=26642; game-id=-M7NZYXi7MdoIrIafGJA; username=Deep; player-id=-M7Nb37WUBR_rnsbsCwz";
 
 // check for cookie information when the window is loaded
@@ -170,23 +176,45 @@ function getRandomizer(bottom, top) {
     return Math.floor( Math.random() * ( 1 + top - bottom ) ) + bottom;
 }
 
+function containsNonDigit(code) {
+    for (var i = 0; i < code.length; i++) {
+        if (isNaN(i - parseFloat(i))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 function join() {
     hide_buttons();
     show_input("game_code","Enter Game Code");
     document.getElementById('game_code').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') {
-            var game_code = document.getElementById('game_code').value;            
+            var game_code = document.getElementById('game_code').value.trim();            
             if (!game_code.replace(/\s/g, '').length) {
                 alert("Field cannot be empty");
+            } else if (containsNonDigit(game_code)) {
+                alert("Code contains non-digits");
             } else {
-                document.getElementById('game_code').value = "";
-                hide_input("game_code");
-                setAttributeForCookie("session-id",game_code);
-                database.ref("active_rounds/"+game_code).once("value",function(snapshot) {
-                    setAttributeForCookie("game-id",snapshot.val());
-                });
+                var pass = false;
 
-                player_prompt("member");
+                if (val_local["rounds"]) {
+                    pass = val_local["rounds"].indexOf(game_code) != -1;
+                }
+
+                if (pass) {
+                    document.getElementById('game_code').value = "";
+                    hide_input("game_code");
+                    setAttributeForCookie("session-id",game_code);
+                    database.ref("active_rounds/"+game_code).once("value",function(snapshot) {
+                        setAttributeForCookie("game-id",snapshot.val());
+                    });
+    
+                    player_prompt("member");
+                } else {
+                    alert("Invalid Game Code!");
+                }
             }
         }
     });
@@ -245,7 +273,6 @@ function welcome_screen() {
         background: "darkorange"
     }
     
-
     database.ref('games/' + getAttributeFromCookie("game-id") + '/players/').on("value", add_player_previews);
 }
 
@@ -270,7 +297,7 @@ function add_player_previews(snapshot) {
     }
 
     database.ref('games/' + getAttributeFromCookie("game-id") + '/accepting_players').on("value", function(snapshot) {
-        if (snapshot.val() == false) {
+        if (snapshot.val() == false) {            
             game_view();
         }
     });    
@@ -322,16 +349,21 @@ function game_view() {
     // set the first judge to the owner
     val_local['current_judge'] = owner;
     database.ref('games/' + getAttributeFromCookie('game-id') + '/current_judge').set(owner);
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_player').set("");
 
-    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_judge').on('value', function(snapshot) {
-        var el = document.querySelector("#" + snapshot.val() + " p:nth-child(2)").innerHTML = "(Judge)";
-    });
+    var game_stat = document.createElement('p');
+    game_stat.id = 'game_status';
+    game_stat.innerHTML = "Status Text"; 
+    if (!document.getElementById('game_status')) {
+        document.getElementById('game_screen').append(game_stat);
+    }
 
-    document.getElementById('game_screen').innerHTML += "<p id='game_status'>Status Text</p>";
     var draw_btn = document.createElement('button');
     draw_btn.id = 'draw_btn';
-    draw_btn.innerHTML = "Draw Your Cards";    
-    document.getElementById('game_screen').append(draw_btn);
+    draw_btn.innerHTML = "Draw Your Cards";
+    if (!document.getElementById('draw_btn')) {
+        document.getElementById('game_screen').append(draw_btn);
+    }
 
     var card = document.createElement('div');
     card.id = 'card';
@@ -353,7 +385,7 @@ function game_view() {
     });
 
     // remove/add card button based on need to draw
-    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/drawn').on('value', function(snapshot) {
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie('player-id') + '/drawn').on('value', function(snapshot) {        
         document.getElementById('draw_btn').style.display = snapshot.val() ? "none": "block";
         document.getElementById('card').style.display = snapshot.val() ? "block" : "none";
     });
@@ -392,6 +424,7 @@ function game_view() {
         var mode = snapshot.val();
         val_local["game_mode"] = mode;
         var players = Object.keys(val_local["players"]);
+        console.log(val_local["game_mode"]);
         // round has started, all players invited to draw cards
         if (mode == "round_start") {
             // update status
@@ -402,6 +435,8 @@ function game_view() {
                 document.getElementById(players[i]).style.backgroundColor = "";
                 document.getElementById(players[i]).classList.add('not_drawn');
             }
+
+
         } else if (mode == "choosing") {
             // update status
             document.getElementById('game_status').innerHTML = "Judge is choosing the next player";
@@ -409,7 +444,9 @@ function game_view() {
             // everyone has drawn
             for (var i = 0; i < players.length; i++) {
                 if (players[i] != val_local["current_judge"]) {
-                    document.getElementById(players[i]).classList.add('unselected');
+                    if (!document.getElementById(players[i]).classList.contains('went')) {
+                        document.getElementById(players[i]).classList.add('unselected');
+                    }
                 }
                 document.getElementById(players[i]).classList.add('player_preview');
                 document.getElementById(players[i]).style.backgroundColor = val_local["players"][players[i]]['background'];
@@ -421,12 +458,14 @@ function game_view() {
             if (val_local["current_judge"] == getAttributeFromCookie("player-id")) {
                 var unselected = document.getElementsByClassName('unselected');
                 for (var i = 0; i < unselected.length; i++) {
-                    unselected[i].addEventListener('click', visualTurnShift);                  
+                    if (val_local["game_mode"] == "choosing") {
+                        unselected[i].addEventListener('click', visualTurnShift);
+                    } else if(val_local["game_mode"] == "decision") {
+                        unselected[i].addEventListener('click', visualTurnShift);
+                    }
                 }
             }
         } else if (mode == "turn") {
-            document.getElementById('game_status').innerHTML = val_local["players"][val_local["current_player"]]["username"] + "'s Turn"; 
-
             // everyone has drawn
             for (var i = 0; i < players.length; i++) {
                 if (players[i] != val_local["current_judge"]) {
@@ -438,81 +477,154 @@ function game_view() {
                 document.getElementById(players[i]).style.backgroundColor = val_local["players"][players[i]]['background'];
                 document.getElementById(players[i]).classList.remove('not_drawn');
             }
-
-            counter = 45;
-            var x = setInterval(function() {
-                var now = new Date().getTime();
-
-                var distance = val_local["dead_line"] - now;
-
-
-                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                document.querySelector("#" + val_local["current_player"] + " p:nth-child(2)").innerHTML = seconds;
-
-                if (distance < 0 && val_local["current_player"] != "") {
-                    clearInterval(x);
-                    document.querySelector("#" + val_local["current_player"] + " p:nth-child(2)").innerHTML = val_local["players"][val_local["current_player"]]["score"];
-                    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + val_local["current_player"] + "/went").set(true);
-                    val_local["current_player"] = "";
-                    database.ref('games/' + getAttributeFromCookie('game-id') + "/current_player").set("");
-                    if (document.getElementsByClassName('unselected').length > 0) {
-                        database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('choosing');
-                    } else {
-                        database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('decision');
-                    }
-                }
-                
-            }, 1000);
         } else if (mode == "decision") {
             document.getElementById("game_status").innerHTML = "Now, Judge " + val_local["players"][val_local["current_judge"]]["username"] + " is making a decision.";
             database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + getAttributeFromCookie("player-id") + "/went").set(false);
 
             // everyone has drawn
             for (var i = 0; i < players.length; i++) {
-                if (players[i] != val_local["current_judge"]) {
-                    if (!document.getElementById(players[i]).classList.contains('went')) {
-                        document.getElementById(players[i]).classList.add('unselected');
-                    }
-                }
                 document.getElementById(players[i]).classList.add('player_preview');
                 document.getElementById(players[i]).style.backgroundColor = val_local["players"][players[i]]['background'];
-                document.getElementById(players[i]).classList.remove('not_drawn');    
+                document.getElementById(players[i]).classList.remove('not_drawn');
             }
+        } else if (mode == "verdict") {       
+            if (val_local["current_judge"] && val_local["round_winner"] && val_local["current_judge"] != "") {
+                alert("Judge " + val_local["players"][val_local["current_judge"]]["username"] + " has picked " + val_local["players"][val_local["round_winner"]]["username"] + "!");
+                if (val_local["current_judge"] == getAttributeFromCookie("player-id")) {
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + val_local["round_winner"] + "/score").once("value", function(snapshot) {
+                        database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + val_local["round_winner"] + "/score").set(snapshot.val() + 1);
+                    });
+                    var judge = val_local["current_judge"];
+                    while(judge == val_local["current_judge"] && val_local["judges"].indexOf(judge) != -1) {
+                        judge = players[getRandomizer(0,players.length - 1)];
+                    }
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/current_judge").set(judge);
 
+                    val_local["round_winner"] = "";
+                    val_local["players"][getAttributeFromCookie("player-id")]["drawn"] = false;
+                    val_local["players"][getAttributeFromCookie("player-id")]["card"] = "";
+                    for (var i = 0; i < players.length; i++) {
+                        database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + players[i] + "/drawn").set(false);
+                    }
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + getAttributeFromCookie("player-id") + "/card").set("");
+    
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/game_mode").set("round_start");
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/round_winner").set("");
+                } else {
+                    val_local["round_winner"] = "";
+                    val_local["players"][getAttributeFromCookie("player-id")]["drawn"] = false;
+                    val_local["players"][getAttributeFromCookie("player-id")]["card"] = "";
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + getAttributeFromCookie("player-id") + "/drawn").set(false);
+                    database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + getAttributeFromCookie("player-id") + "/card").set("");    
+                }    
+            }
+        } else if (mode == "finished") {
+            // calculate the winner
+            max_id = "";
+            max = 0;
+            max_occurrences = 0;
 
-            if (val_local["current_judge"] == getAttributeFromCookie("player-id")) {
-                var unselected = document.getElementsByClassName('unselected');
-                for (var i = 0; i < unselected.length; i++) {
-                    unselected[i].addEventListener('click', pickRoundWinner);                  
+            for (var i = 0; i < players.length; i++) {
+                if (val_local["players"][players[i]]["score"] >= max) {
+                    if (val_local["players"][players[i]]["score"] != max) {
+                        max_occurrences = 0;
+                    }
+                    max_id = players[i];
+                    max = val_local["players"][players[i]]["score"];
+                    max_occurrences++;
                 }
             }
 
-        } else if (mode == "verdict") {            
-            document.getElementById("game_status").innerHTML = "Judge " + val_local["players"][val_local["current_judge"]]["username"] + " has picked " + val_local["players"][val_local["round_winner"]]["username"] + "!";
-            database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + val_local["round_winner"] + "/score").once("value", function(snapshot) {
-                database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + val_local["round_winner"] + "/score").set(snapshot.val() + 1);
-                document.querySelector("#" + val_local["round_winner"] + " p:nth-child(2)").innerHTML = snapshot.val() + 1;
-            });
-            val_local["round_winner"] = "";
-            var judge = val_local["current_judge"];
-            document.querySelector("#" + val_local["current_judge"] + " p:nth-child(2)").innerHTML = val_local["players"][val_local["current_judge"]]["score"];
-
-            while(judge == val_local["current_judge"]) {
-                judge = players[getRandomizer(0,players.length - 1)];
+            // announce the winner
+            if (max_occurrences == 1) {
+                alert(val_local["players"][max_id]["username"] + " wins!");
+            } else {
+                alert("There's a tie!");
             }
 
-            val_local["current_judge"] = judge;
+            // clear cookie data
+            if (location.href.includes("file://")) {
+                local_cookie = undefined;
+            } else {
+                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+            }
+        
+            // refresh the page
+            window.location.reload(false);                
+        }
+    });
 
-            database.ref("games/" + getAttributeFromCookie("game-id") + "/current_judge").set(judge);
-            database.ref("games/" + getAttributeFromCookie("game-id") + "/game_mode").set("round_start");
-            val_local["players"][val_local[getAttributeFromCookie("player-id")]]["drawn"] = false;
-            val_local["players"][val_local[getAttributeFromCookie("player-id")]]["card"] = "";
-            database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + getAttributeFromCookie("player-id") + "/drawn").set(false);
-            database.ref("games/" + getAttributeFromCookie("game-id") + "/players/" + getAttributeFromCookie("player-id") + "/card").set("");
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_judge').on('value',function(snapshot) {
+        if (snapshot.val()) {
+            document.querySelector("#" + val_local["current_judge"] + " p:nth-child(2)").innerHTML = val_local["players"][val_local["current_judge"]]["score"];
+            document.getElementById(snapshot.val()).classList.remove("unselected");
+            document.getElementById(snapshot.val()).classList.remove("went");
+            val_local["current_judge"] = snapshot.val();
+            if (val_local["judges"].indexOf(snapshot.val()) == -1) {
+                val_local["judges"].push(snapshot.val());
+            }
+            val_local["judges"].push(snapshot.val());
+            if (val_local["judges"].length == Object.keys(val_local["players"]).length) {
+                val_local["judges"] = [];
+                val_local["judges"].push(snapshot.val());
+            }
+            document.querySelector("#" + snapshot.val() + " p:nth-child(2)").innerHTML = "(Judge)";            
+        }
+    });
 
-        } else if (mode == "finished") {
+    database.ref('games/' + getAttributeFromCookie('game-id') + '/current_player').on('value',function(snapshot) {
+        val_local["current_player"] = snapshot.val();
 
+        if (val_local["current_player"] != "") {
+            document.getElementById('game_status').innerHTML = val_local["players"][val_local["current_player"]]["username"] + "'s Turn";
+
+            counter = 45;
+            var x = setInterval(function() {
+                var now = new Date().getTime();
+    
+                var distance = val_local["dead_line"] - now;
+    
+                var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    
+                if (val_local["current_player"] != "") {
+                    document.querySelector("#" + val_local["current_player"] + " p:nth-child(2)").innerHTML = seconds;
+                }
+    
+                if (distance < 0 && val_local["current_player"] != "") {
+                    clearInterval(x);
+                    document.querySelector("#" + val_local["current_player"] + " p:nth-child(2)").innerHTML = val_local["players"][val_local["current_player"]]["score"];
+                    database.ref('games/' + getAttributeFromCookie('game-id') + '/players/' + val_local["current_player"] + "/went").set(true);
+                    val_local["current_player"] = "";
+                    database.ref('games/' + getAttributeFromCookie('game-id') + "/current_player").set("");
+                    if (document.getElementsByClassName('unselected').length > 0 && val_local["game_mode"] != "decision") {
+                        database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('choosing');
+                    } else {
+                        if (val_local["game_mode"] == "choosing") {
+                            database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('decision');
+                        }
+                    }
+                }
+                
+            }, 1000);    
+        }
+    });
+
+
+    document.getElementById('game_header').addEventListener('click', function(e) {
+        if (getAttributeFromCookie("player-id") == val_local["current_judge"]) {
+            database.ref("games/" + getAttributeFromCookie("game-id") + "/game_mode").set("finished");
+        }
+    });
+
+    document.getElementById('game_header').addEventListener('mouseenter', function(e) {
+        if (getAttributeFromCookie("player-id") == val_local["current_judge"]) {
+            document.getElementById(e.target.id).innerHTML = "End Game";        
+        }
+    });
+
+    document.getElementById('game_header').addEventListener('mouseleave', function(e) {
+        if (getAttributeFromCookie("player-id") == val_local["current_judge"]) {
+            document.getElementById(e.target.id).innerHTML = "DCF Plays Snake Oil!";
         }
     });
 
@@ -520,25 +632,38 @@ function game_view() {
     database.ref('games/' + getAttributeFromCookie('game-id') + '/players/').on('value',function(snapshot) {
         var players = Object.keys(snapshot.val());
         for (var i = 0; i < players.length; i++) {
-            if (val_local['game_mode'] == 'round_start' && snapshot.val()[players[i]]['drawn']) {
-                document.getElementById(players[i]).classList.remove('not_drawn');
-                document.getElementById(players[i]).classList.add('player_preview');
-                document.getElementById(players[i]).style.backgroundColor = snapshot.val()[players[i]]['background'];
+            if (val_local['game_mode'] == 'round_start') {
+                if (snapshot.val()[players[i]]['drawn']) {
+                    document.getElementById(players[i]).classList.remove('not_drawn');
+                    document.getElementById(players[i]).classList.add('player_preview');
+                    document.getElementById(players[i]).style.backgroundColor = snapshot.val()[players[i]]['background'];
+                } else {
+                    document.getElementById(players[i]).classList.add('not_drawn');
+                    document.getElementById(players[i]).style.backgroundColor = "none";    
+                }
             }
 
-            if (snapshot.val()[players[i]]['went']) {
-                document.getElementById(players[i]).classList.remove("unselected");
-                document.getElementById(players[i]).classList.add("went");
-            } else {
-                document.getElementById(players[i]).classList.remove("went");   
-            }
+            // if (val_local['game_mode'] != 'round_start') {
+                if (snapshot.val()[players[i]]['went']) {
+                    document.getElementById(players[i]).classList.remove("unselected");
+                    document.getElementById(players[i]).classList.add("went");
+                } else {
+                    if (players[i] != val_local["current_judge"]) {
+                        document.getElementById(players[i]).classList.add("unselected");
+                        document.getElementById(players[i]).classList.remove("went");    
+                    }
+                }    
+            // } 
 
-            if (document.getElementsByClassName('went').length == players.length) {
-                alert("why...");
+            if (document.getElementsByClassName('went').length == players.length - 1 && val_local['game_mode'] == 'turn') {
                 database.ref('games/' + getAttributeFromCookie('game-id') + '/game_mode').set('decision');
             }
 
             val_local["players"][players[i]]["score"] = snapshot.val()[players[i]]["score"];
+            if (players[i] != val_local["current_judge"]) {
+                document.querySelector("#" + players[i] + " p:nth-child(2)").innerHTML = val_local["players"][players[i]]["score"];
+            }
+
 
         }
 
@@ -549,17 +674,25 @@ function game_view() {
     });
 }
 
-function pickRoundWinner(e) {
-    database.ref('games/' + getAttributeFromCookie("game-id") + "/round_winner").set(e.target.id);
-    database.ref('games/' + getAttributeFromCookie("game-id") + "/game_mode").set("verdict");
-}
-
 function visualTurnShift(e) {    
-    database.ref('games/' + getAttributeFromCookie("game-id") + "/current_player").set(e.target.id);
-    database.ref('games/' + getAttributeFromCookie("game-id") + "/game_mode").set("turn");
-    var now = Date.now();
-    database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 10000);
-    // database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 45000);
+    if (val_local["game_mode"] == "choosing" && val_local["current_judge"] == getAttributeFromCookie("player-id")) {
+        var el = e.target;
+        while (el.id == "") {
+            e = e.parentNode;
+        }
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/current_player").set(el.id);
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/game_mode").set("turn");
+        var now = Date.now();
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 3000);
+        // database.ref('games/' + getAttributeFromCookie("game-id") + "/dead_line").set(now + 45000);    
+    } else if (val_local["game_mode"] == "decision" && val_local["current_judge"] == getAttributeFromCookie("player-id")) {
+        var el = e.target;
+        while (el.id == "") {
+            e = e.parentNode;
+        }
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/round_winner").set(el.id);
+        database.ref('games/' + getAttributeFromCookie("game-id") + "/game_mode").set("verdict");
+    }
 }
 
 function randomOccupation() {
