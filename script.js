@@ -701,7 +701,7 @@ function visualTurnShift(e) {
 }
 
 function randomOccupation() {
-    arr = ["doctor", "engineer", "movie-star", "hitchhiker","couch potato","newlywed","rapper","hostage","sports mascot","caveman","secret admirer","fashion model","teacher","spy","politician","hunter","pirate","cowboy","nurse","diva","dumpster diver","kindergartner","billionare","sports fan","pro wrestler","senior citizen","geek","ninja","prom date","soldier","party host","super hero","youtuber","UniTrans driver","zombie","cheerleader","babysitter","Paparazzi"]
+    arr = ["doctor", "chem-e", "engineer", "movie-star", "hitchhiker","couch potato","newlywed","rapper","hostage","sports mascot","caveman","secret admirer","fashion model","teacher","spy","politician","hunter","pirate","cowboy","nurse","diva","dumpster diver","kindergartner","billionare","sports fan","pro wrestler","senior citizen","geek","ninja","prom date","soldier","party host","super hero","youtuber","UniTrans driver","zombie","cheerleader","babysitter","Paparazzi"]
     return arr[getRandomizer(0,arr.length - 1)];
 }
 
